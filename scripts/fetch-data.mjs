@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'child_process';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -10,6 +10,7 @@ const __dirname = dirname(__filename);
 
 const BASE_URL = 'https://xn--80ahkdh8c.xn--p1ai';
 const OUTPUT_DIR = join(__dirname, '..', 'public', 'data');
+const PAGES_DIR = join(OUTPUT_DIR, 'pages');
 
 const PAGES = [
   { id: 'featured-120-2', url: 'samye-deshevye-aviabilety-po-miru-120-2.html', name: 'Избранные 120 дней, с пересадками' },
@@ -158,33 +159,59 @@ async function fetchPage(url) {
 async function main() {
   console.log('Fetching ticket data...\n');
 
-  // Ensure output directory exists
-  mkdirSync(OUTPUT_DIR, { recursive: true });
+  // Clean and recreate output directories
+  rmSync(OUTPUT_DIR, { recursive: true, force: true });
+  mkdirSync(PAGES_DIR, { recursive: true });
 
-  const results = {
+  const indexData = {
     fetchedAt: new Date().toISOString(),
     pages: {}
   };
 
+  let totalCities = 0;
+
   for (const page of PAGES) {
     console.log(`Fetching ${page.name}...`);
+    const pageFile = join(PAGES_DIR, `${page.id}.json`);
+
     try {
       const html = await fetchPage(page.url);
       const data = parseTicketsHtml(html, page.id);
-      results.pages[page.id] = data;
+
+      // Save individual page file
+      writeFileSync(pageFile, JSON.stringify(data, null, 2));
+
+      // Add to index
+      indexData.pages[page.id] = {
+        updatedAt: data.updatedAt,
+        cities: data.cities.length,
+        cityList: data.cities.map(c => c.city),
+      };
+
+      totalCities += data.cities.length;
       console.log(`  ✓ Got ${data.cities.length} cities`);
     } catch (error) {
       console.error(`  ✗ Failed: ${error.message}`);
-      results.pages[page.id] = { error: error.message, cities: [], pageId: page.id };
+
+      // Save error state
+      const errorData = { error: error.message, cities: [], pageId: page.id, updatedAt: '' };
+      writeFileSync(pageFile, JSON.stringify(errorData, null, 2));
+
+      indexData.pages[page.id] = {
+        error: error.message,
+        cities: 0,
+        cityList: [],
+      };
     }
   }
 
-  // Write to public/data/data.json
-  const outputPath = join(OUTPUT_DIR, 'data.json');
-  writeFileSync(outputPath, JSON.stringify(results, null, 2));
+  // Write index file
+  writeFileSync(join(OUTPUT_DIR, 'index.json'), JSON.stringify(indexData, null, 2));
 
-  console.log(`\n✅ Data saved to public/data/data.json`);
-  console.log(`   Total cities: ${Object.values(results.pages).reduce((acc, p) => acc + (p.cities?.length || 0), 0)}`);
+  console.log(`\n✅ Data saved to public/data/`);
+  console.log(`   Index: public/data/index.json`);
+  console.log(`   Pages: public/data/pages/*.json`);
+  console.log(`   Total cities: ${totalCities}`);
 }
 
 main().catch(console.error);

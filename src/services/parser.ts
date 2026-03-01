@@ -1,12 +1,13 @@
 import type { PageData } from '../types';
 import { CATEGORIES } from '../types';
 
-// Data is now fetched at build time by GitHub Actions and served as static JSON
-// This completely solves the CORS problem!
+// Data is fetched at build time by GitHub Actions and served as static JSON
+// Each page is stored in a separate file for faster loading
 
-const DATA_URL = '/kuda-iz-rf-viewer/data/data.json';
+const BASE_URL = '/kuda-iz-rf-viewer/data';
 
-let cachedData: Record<string, PageData> | null = null;
+// Cache for loaded pages
+const pageCache = new Map<string, PageData>();
 
 export async function fetchTicketsPage(pageId: string): Promise<PageData> {
   // Check if category exists
@@ -15,39 +16,45 @@ export async function fetchTicketsPage(pageId: string): Promise<PageData> {
     throw new Error(`Категория "${pageId}" не найдена`);
   }
 
-  // Load data if not cached
-  if (!cachedData) {
-    try {
-      const response = await fetch(DATA_URL);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+  // Check cache first
+  if (pageCache.has(pageId)) {
+    return pageCache.get(pageId)!;
+  }
 
-      const json = await response.json();
-      cachedData = json.pages;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      throw new Error(`Не удалось загрузить данные: ${message}`);
+  // Load specific page file
+  try {
+    const response = await fetch(`${BASE_URL}/pages/${pageId}.json`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
+
+    const data: PageData = await response.json();
+    pageCache.set(pageId, data);
+
+    if (data.error) {
+      throw new Error(`Ошибка в данных: ${data.error}`);
+    }
+
+    return data;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
+    throw new Error(`Не удалось загрузить данные: ${message}`);
   }
-
-  const pageData = cachedData![pageId];
-
-  if (!pageData) {
-    throw new Error(`Данные для категории "${pageId}" не найдены`);
-  }
-
-  if (pageData.error) {
-    throw new Error(`Ошибка в данных: ${pageData.error}`);
-  }
-
-  return pageData;
 }
 
-// Get list of available pages with data
-export function getAvailablePages(): string[] {
-  if (!cachedData) return [];
-  return Object.keys(cachedData).filter(id => !cachedData![id].error);
+// Get list of available pages with data (loads lightweight index)
+export async function getAvailablePages(): Promise<string[]> {
+  try {
+    const response = await fetch(`${BASE_URL}/index.json`);
+    if (!response.ok) return [];
+
+    const index = await response.json();
+    return Object.entries(index.pages)
+      .filter(([, data]: [string, any]) => !data.error && data.cities > 0)
+      .map(([id]: [string, any]) => id);
+  } catch {
+    return [];
+  }
 }
 
 // Extract all unique values for filters

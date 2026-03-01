@@ -1,0 +1,50 @@
+{
+  "fetchedAt": "2026-03-01T12:00:00.000Z",
+  "pages": {
+    "cheap-120-0": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 3,
+      "cityList": ["Москва", "Санкт-Петербург", "Екатеринбург"]
+    },
+    "cheap-120-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 1,
+      "cityList": ["Москва"]
+    },
+    "cheap-30-0": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 1,
+      "cityList": ["Москва"]
+    },
+    "cheap-30-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 0,
+      "cityList": []
+    },
+    "cheap-365-0": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 0,
+      "cityList": []
+    },
+    "cheap-365-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 0,
+      "cityList": []
+    },
+    "featured-120-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 0,
+      "cityList": []
+    },
+    "featured-30-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 0,
+      "cityList": []
+    },
+    "featured-365-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": 0,
+      "cityList": []
+    }
+  }
+}

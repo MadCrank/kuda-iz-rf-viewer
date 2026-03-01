@@ -1,0 +1,29 @@
+{
+  "pageId": "cheap-30-0",
+  "updatedAt": "2026-03-01 09:22:52",
+  "cities": [
+    {
+      "city": "Москва",
+      "routes": [
+        {
+          "fromCity": "Москва",
+          "toCity": "Ереван",
+          "country": "Армения",
+          "tickets": [
+            {
+              "id": "aaa111",
+              "fromCity": "Москва",
+              "toCity": "Ереван",
+              "country": "Армения",
+              "date": "05.03.26",
+              "stops": 0,
+              "price": 6500,
+              "currency": "₽",
+              "link": "https://example.com"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

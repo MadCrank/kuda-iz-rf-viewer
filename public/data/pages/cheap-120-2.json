@@ -1,0 +1,29 @@
+{
+  "pageId": "cheap-120-2",
+  "updatedAt": "2026-03-01 09:22:52",
+  "cities": [
+    {
+      "city": "Москва",
+      "routes": [
+        {
+          "fromCity": "Москва",
+          "toCity": "Бангкок",
+          "country": "Таиланд",
+          "tickets": [
+            {
+              "id": "xyz999",
+              "fromCity": "Москва",
+              "toCity": "Бангкок",
+              "country": "Таиланд",
+              "date": "25.03.26",
+              "stops": 1,
+              "price": 28000,
+              "currency": "₽",
+              "link": "https://example.com"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
