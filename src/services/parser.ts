@@ -1,158 +1,53 @@
-import type { Ticket, CityTickets, RouteTickets, PageData } from '../types';
+import type { PageData } from '../types';
+import { CATEGORIES } from '../types';
 
-const BASE_URL = 'https://xn--80ahkdh8c.xn--p1ai';
+// Data is now fetched at build time by GitHub Actions and served as static JSON
+// This completely solves the CORS problem!
 
-// Configure your CORS proxy URL here
-// Options:
-// 1. Cloudflare Worker (recommended, free 100K requests/day):
-//    Create a worker with the code below and set:
-//    CORS_PROXY_URL = 'https://your-worker.your-subdomain.workers.dev/?target='
-//
-// 2. Or use a self-hosted proxy
-const CORS_PROXY_URL = 'https://kudaiz-proxy.pzykov.workers.dev/?target=';
+const DATA_URL = '/kuda-iz-rf-viewer/data/data.json';
 
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 11);
-}
+let cachedData: Record<string, PageData> | null = null;
 
-function parsePrice(text: string): { price: number; currency: string } {
-  const match = text.match(/(\d+)\s*(₽|\$|€)/);
-  if (match) {
-    return { price: parseInt(match[1], 10), currency: match[2] };
-  }
-  return { price: 0, currency: '₽' };
-}
-
-export function parseTicketsHtml(html: string): PageData {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-
-  const cities: CityTickets[] = [];
-  let updatedAt = '';
-
-  // Find update time
-  const updateMatch = html.match(/Обновлено<\/b>:\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
-  if (updateMatch) {
-    updatedAt = updateMatch[1];
+export async function fetchTicketsPage(pageId: string): Promise<PageData> {
+  // Check if category exists
+  const category = CATEGORIES.find(c => c.id === pageId);
+  if (!category) {
+    throw new Error(`Категория "${pageId}" не найдена`);
   }
 
-  // Find all city sections (details elements with city names)
-  const detailsElements = doc.querySelectorAll('.ListOfGroupTickets details, .ListOfTickets details');
-
-  detailsElements.forEach((detail) => {
-    const summary = detail.querySelector('summary');
-    if (!summary) return;
-
-    const cityHeading = summary.querySelector('h3');
-    if (!cityHeading) return;
-
-    const cityName = cityHeading.textContent?.trim() || '';
-    if (!cityName) return;
-
-    const routes: RouteTickets[] = [];
-    let currentCountry = '';
-
-    // Parse the content inside details
-    const content = detail.innerHTML;
-
-    // Split by country headers (H3 tags)
-    const parts = content.split(/<H3>([^<]+)<\/H3>/i);
-
-    for (let i = 1; i < parts.length; i += 2) {
-      currentCountry = parts[i].trim();
-      const routeContent = parts[i + 1] || '';
-
-      // Parse routes in this country section
-      const routeMatches = routeContent.split(/<b>([^<]+)<\/b>/);
-
-      for (let j = 1; j < routeMatches.length; j += 2) {
-        const routeName = routeMatches[j].trim();
-        const ticketContent = routeMatches[j + 1] || '';
-
-        // Skip non-route elements
-        if (!routeName.includes('-')) continue;
-
-        const [fromCity, toCity] = routeName.split('-').map(s => s.trim());
-        if (!fromCity || !toCity) continue;
-
-        const tickets: Ticket[] = [];
-
-        // Parse individual tickets
-        // Format: →[0]:19.04.26  <a href="...">7465 ₽</a> <a href="...">🏠</a>
-        const ticketRegex = /→\[(\d+)\]:(\d{2}\.\d{2}\.\d{2})\s*<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>(?:\s*<a[^>]*href="([^"]+)"[^>]*>🏠<\/a>)?/g;
-
-        let ticketMatch;
-        while ((ticketMatch = ticketRegex.exec(ticketContent)) !== null) {
-          const [, stops, date, link, priceText, hotelLink] = ticketMatch;
-          const { price, currency } = parsePrice(priceText);
-
-          if (price > 0) {
-            tickets.push({
-              id: generateId(),
-              fromCity,
-              toCity,
-              country: currentCountry,
-              date,
-              stops: parseInt(stops, 10),
-              price,
-              currency,
-              link,
-              hotelLink: hotelLink || undefined,
-            });
-          }
-        }
-
-        if (tickets.length > 0) {
-          routes.push({
-            fromCity,
-            toCity,
-            country: currentCountry,
-            tickets,
-          });
-        }
+  // Load data if not cached
+  if (!cachedData) {
+    try {
+      const response = await fetch(DATA_URL);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-    }
 
-    if (routes.length > 0) {
-      cities.push({
-        city: cityName,
-        routes,
-      });
+      const json = await response.json();
+      cachedData = json.pages;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      throw new Error(`Не удалось загрузить данные: ${message}`);
     }
-  });
+  }
 
-  return { updatedAt, cities };
+  const pageData = cachedData![pageId];
+
+  if (!pageData) {
+    throw new Error(`Данные для категории "${pageId}" не найдены`);
+  }
+
+  if (pageData.error) {
+    throw new Error(`Ошибка в данных: ${pageData.error}`);
+  }
+
+  return pageData;
 }
 
-export async function fetchTicketsPage(url: string): Promise<PageData> {
-  const fullUrl = `${BASE_URL}/${url}`;
-
-  try {
-    // Use CORS proxy
-    const proxyUrl = `${CORS_PROXY_URL}${encodeURIComponent(fullUrl)}`;
-
-    const response = await fetch(proxyUrl, {
-      headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const html = await response.text();
-
-    // Validate response
-    if (!html.includes('Обновлено') && !html.includes('aviabilety')) {
-      throw new Error('Получен некорректный ответ от сервера');
-    }
-
-    return parseTicketsHtml(html);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
-    throw new Error(`Не удалось загрузить данные: ${message}`);
-  }
+// Get list of available pages with data
+export function getAvailablePages(): string[] {
+  if (!cachedData) return [];
+  return Object.keys(cachedData).filter(id => !cachedData![id].error);
 }
 
 // Extract all unique values for filters

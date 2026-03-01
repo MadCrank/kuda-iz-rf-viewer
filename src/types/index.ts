@@ -26,6 +26,7 @@ export interface RouteTickets {
 export interface PageData {
   updatedAt: string;
   cities: CityTickets[];
+  error?: string;
 }
 
 export type CategoryType = 'featured' | 'cheap';

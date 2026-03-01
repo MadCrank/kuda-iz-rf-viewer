@@ -36,7 +36,7 @@ function TicketsPage() {
     setLoading(true)
     setError(null)
 
-    fetchTicketsPage(category.url)
+    fetchTicketsPage(category.id)
       .then(setData)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))

@@ -1,0 +1,159 @@
+{
+  "fetchedAt": "2026-03-01T11:30:00.000Z",
+  "pages": {
+    "cheap-120-0": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": [
+        {
+          "city": "Москва",
+          "routes": [
+            {
+              "fromCity": "Москва",
+              "toCity": "Стамбул",
+              "country": "Турция",
+              "tickets": [
+                {
+                  "id": "abc123",
+                  "fromCity": "Москва",
+                  "toCity": "Стамбул",
+                  "country": "Турция",
+                  "date": "15.03.26",
+                  "stops": 0,
+                  "price": 8500,
+                  "currency": "₽",
+                  "link": "https://example.com"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "city": "Санкт-Петербург",
+          "routes": [
+            {
+              "fromCity": "Санкт-Петербург",
+              "toCity": "Дубай",
+              "country": "ОАЭ",
+              "tickets": [
+                {
+                  "id": "def456",
+                  "fromCity": "Санкт-Петербург",
+                  "toCity": "Дубай",
+                  "country": "ОАЭ",
+                  "date": "20.03.26",
+                  "stops": 0,
+                  "price": 12500,
+                  "currency": "₽",
+                  "link": "https://example.com"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "city": "Екатеринбург",
+          "routes": [
+            {
+              "fromCity": "Екатеринбург",
+              "toCity": "Ташкент",
+              "country": "Узбекистан",
+              "tickets": [
+                {
+                  "id": "ghi789",
+                  "fromCity": "Екатеринбург",
+                  "toCity": "Ташкент",
+                  "country": "Узбекистан",
+                  "date": "18.03.26",
+                  "stops": 0,
+                  "price": 9800,
+                  "currency": "₽",
+                  "link": "https://example.com"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "cheap-120-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": [
+        {
+          "city": "Москва",
+          "routes": [
+            {
+              "fromCity": "Москва",
+              "toCity": "Бангкок",
+              "country": "Таиланд",
+              "tickets": [
+                {
+                  "id": "xyz999",
+                  "fromCity": "Москва",
+                  "toCity": "Бангкок",
+                  "country": "Таиланд",
+                  "date": "25.03.26",
+                  "stops": 1,
+                  "price": 28000,
+                  "currency": "₽",
+                  "link": "https://example.com"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "cheap-30-0": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": [
+        {
+          "city": "Москва",
+          "routes": [
+            {
+              "fromCity": "Москва",
+              "toCity": "Ереван",
+              "country": "Армения",
+              "tickets": [
+                {
+                  "id": "aaa111",
+                  "fromCity": "Москва",
+                  "toCity": "Ереван",
+                  "country": "Армения",
+                  "date": "05.03.26",
+                  "stops": 0,
+                  "price": 6500,
+                  "currency": "₽",
+                  "link": "https://example.com"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "cheap-30-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": []
+    },
+    "cheap-365-0": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": []
+    },
+    "cheap-365-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": []
+    },
+    "featured-120-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": []
+    },
+    "featured-30-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": []
+    },
+    "featured-365-2": {
+      "updatedAt": "2026-03-01 09:22:52",
+      "cities": []
+    }
+  }
+}
