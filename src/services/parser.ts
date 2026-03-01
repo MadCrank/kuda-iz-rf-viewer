@@ -115,43 +115,67 @@ export function parseTicketsHtml(html: string): PageData {
   return { updatedAt, cities };
 }
 
-export async function fetchTicketsPage(url: string): Promise<PageData> {
-  const fullUrl = `${BASE_URL}/${url}`;
+// List of CORS proxies to try
+const CORS_PROXIES = [
+  // Cloudflare Workers based proxies (most reliable)
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  // Alternative proxies
+  (url: string) => `https://cors.isomorphic-git.org/${url}`,
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
 
-  // Try direct fetch first, then fallback to CORS proxy
+async function fetchWithProxy(url: string): Promise<string> {
+  // Try direct fetch first (in case CORS is enabled on the server)
   try {
-    const response = await fetch(fullUrl, {
+    const response = await fetch(url, {
+      mode: 'cors',
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (response.ok) {
+      return await response.text();
     }
+  } catch {
+    // Direct fetch failed, try proxies
+  }
 
-    const html = await response.text();
+  // Try each proxy
+  for (const getProxyUrl of CORS_PROXIES) {
+    try {
+      const proxyUrl = getProxyUrl(url);
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+
+      if (response.ok) {
+        const text = await response.text();
+        // Validate that we got HTML, not an error page
+        if (text.includes('Обновлено') || text.includes('aviabilety') || text.includes('<title>')) {
+          return text;
+        }
+      }
+    } catch {
+      // This proxy failed, try next
+      continue;
+    }
+  }
+
+  throw new Error('Все прокси недоступны. Попробуйте позже.');
+}
+
+export async function fetchTicketsPage(url: string): Promise<PageData> {
+  const fullUrl = `${BASE_URL}/${url}`;
+
+  try {
+    const html = await fetchWithProxy(fullUrl);
     return parseTicketsHtml(html);
   } catch (error) {
-    // Try with CORS proxy
-    const corsProxies = [
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`,
-      `https://corsproxy.io/?${encodeURIComponent(fullUrl)}`,
-    ];
-
-    for (const proxyUrl of corsProxies) {
-      try {
-        const response = await fetch(proxyUrl);
-        if (response.ok) {
-          const html = await response.text();
-          return parseTicketsHtml(html);
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    throw new Error('Failed to fetch tickets data');
+    const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
+    throw new Error(`Не удалось загрузить данные: ${message}`);
   }
 }
 
