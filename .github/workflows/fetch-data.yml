@@ -21,9 +21,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
-
+      # The script uses only Node built-ins (no npm dependencies)
       - name: Fetch data
         run: node scripts/fetch-data.mjs
         env:
